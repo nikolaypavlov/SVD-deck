@@ -1,0 +1,236 @@
+---
+title       : SVD - Singular Value Decomposition
+subtitle    : Practical Intro
+author      : Mykola Pavlov
+job         : Biomech, Inc
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax]     # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## What is SVD?
+
+$$latex
+A = U \Sigma V^{T}
+$$
+
+$A$ is m x n matrix
+
+$U$ is m x k orthonormal matrix 
+
+$V$ is n x k orthonormal matrix
+
+$\Sigma$ is k x k - diagonal matrix
+
+---
+
+## Latent Semantic Analysis
+
+Application of SVD to term-document matrices
+
+``` {r, echo=FALSE}
+
+docs <- c("Human machine interface for Lab ABC computer applications",
+        "A survey of user opinion of computer system response time",
+        "The EPS user interface management system",
+        "System and human system engineering testing of EPS",
+        "Relation of user-perceived response time to error measurement",
+        "The generation of random, binary, unordered trees",
+        "The intersection graph of paths in trees",
+        "Graph minors IV: Widths of trees and well-quasi-ordering",
+        "Graph minors: A survey")
+docs
+
+```
+
+Documents (Deerwester et al. (1990), Table 2, Part 1)
+
+---
+
+## Term-Document Matrix
+
+``` {r, cache=TRUE}
+df <- read.csv(file="matrix.csv")
+print(df, row.names=F)
+```
+
+---
+
+## Let's compute SVD
+
+``` {r, echo=FALSE}
+options(digits=1)
+```
+
+``` {r}
+df.svd <- svd(df[,-1])
+scales <- df.svd$d[1:2]
+scales
+
+``` 
+
+--- 
+
+## Term Space
+
+``` {r}
+termVectors <- df.svd$u[,1:2]
+terms.lsi <- data.frame(termVectors, terms)
+print(terms.lsi, row.names=F)
+```
+
+---
+
+## Document Space
+
+``` {r}
+docVectors <- df.svd$v[,1:2]
+docs.lsi <- data.frame(docVectors, Docs=strtrim(docs, 50))
+print(docs.lsi, row.names=F, col.names=F)
+```
+
+---
+
+## Query "Human computer interaction"
+
+``` {r}
+human <- as.numeric(terms.lsi[terms.lsi$terms == "human", 1:2])
+computer <- as.numeric(terms.lsi[terms.lsi$terms == "computer", 1:2])
+query <- human + computer
+print(query)
+```
+
+$(0.22, -0.11) + (0.24, 0.04) = (0.46, -0.07)$
+
+---
+
+## Document Scores VS Query
+
+Cosine distance: $Cos\theta =  \frac{a \cdot b}{||a|| ||b||}$
+
+``` {r}
+y <- (scales * query)
+scores <- apply(docs.lsi[,1:2], 1, function(x) x %*% y / sqrt(x%*%x * y%*%y))
+print(data.frame(scores, docs), row.names=F)
+```
+
+--- 
+
+## Query and Document Space
+
+``` {r}
+plot(docs.lsi$X1, docs.lsi$X2, type="n", xlim = c(-1.6, 0))
+arrows(0,0, docs.lsi$X1, docs.lsi$X2)
+arrows(0,0, scales[1]*query[1], scales[2]*query[2], col=2)
+```
+
+---
+
+## Term Scores VS Query
+
+``` {r}
+y <- (scales * query)
+scores <- apply(terms.lsi[,1:2], 1, function(x) x %*% y / sqrt(x%*%x * y%*%y))
+print(data.frame(scores, terms), row.names=F)
+```
+
+---
+
+## Let's dive into math
+Row Space -> Column Space
+
+$AV = U \Sigma$
+
+``` {r, echo=FALSE}
+print(df, row.names=F)
+```
+
+---
+
+## Simplifications 
+
+$A = U \Sigma V^{-1} = U \Sigma V^{T}$
+  
+$A^{T} A = V \Sigma^{T} U^{T} U \Sigma V^{T} = V \Sigma^2 V^{T}$
+
+$A A^{T} = U \Sigma V^{T} V \Sigma^{T} U^{T}= U \Sigma^2 U^{T}$
+
+But what is $U$, $\Sigma$, $V$?
+
+--- 
+
+## Matrix Spectral Theorem
+
+There exists an orthonormal basis of Q consisting of eigenvectors of B. Each eigenvalue is real
+
+$B = Q \Lambda Q^{T}$
+
+And our $AA^{T}$ is like B, squared, symmetric 
+
+But what is eigenvalues and eigenvectors?
+
+--- 
+
+## Eigenvalues
+
+$Ax = \lambda x$ 
+
+<img class=center src=assets/fig/eigen.gif height='400'/>
+
+--- 
+
+## Solve 
+
+$Ax - \lambda x = 0$
+
+$(A - \lambda I) x = 0$
+
+$A - \lambda I = 0$
+
+$\lambda$ - eigenvalues
+
+$x$ - eigenvectors
+
+--- 
+
+## Algorithm to find SVD
+
+ 1. Find eigenvectors $U$ of $A A^{T}$ 
+ 
+ 2. Find eigenvectors $V$ of $A^{T} A$
+ 
+ 3. The non-zero singular values of $A$ found on the diagonal entries of $\Sigma$ are the square roots of the non-zero eigenvalues of both $A A^{T}$ and $A^{T} A$.
+
+That's it!
+
+---  
+ 
+## Eigenvalues
+
+<img class=center src=assets/fig/eigenval.png height='512'/>
+
+---
+## Links
+
+MIT Professor Gilbert Strang teaching 18.06:
+http://ocw.mit.edu/courses/mathematics/18-06-linear-algebra-spring-2010/video-lectures/
+
+SVD Tutorial:
+http://alias-i.com/lingpipe/demos/tutorial/svd/read-me.html
+
+Wiki: http://en.wikipedia.org/wiki/Singular_value_decomposition
+
+---
+## Contacts
+
+### Nikolay Pavlov, Founder at Biomech
+ 
+* E-mail: me@nikolaypavlov.com 
+* Linkedin: http://linkedin.com/in/nikolaypavlov
+* Facebook: http://www.facebook.com/pav.nikolay
+* Twitter: https://twitter.com/nikolaypavlov
+* Github: https://github.com/nikolaypavlov
+

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SVD - Singular Value Decomposition</title>
+  <meta charset="utf-8">
+  <meta name="description" content="SVD - Singular Value Decomposition">
+  <meta name="author" content="Mykola Pavlov">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>SVD - Singular Value Decomposition</h1>
+    <h2>Practical Intro</h2>
+    <p>Mykola Pavlov<br/>Biomech, Inc</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>What is SVD?</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>\[
+A = U \Sigma V^{T}
+\]</p>
+
+<p>\(A\) is m x n matrix</p>
+
+<p>\(U\) is m x k orthonormal matrix </p>
+
+<p>\(V\) is n x k orthonormal matrix</p>
+
+<p>\(\Sigma\) is k x k - diagonal matrix</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>Latent Semantic Analysis</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Application of SVD to term-document matrices</p>
+
+<pre><code>## [1] &quot;Human machine interface for Lab ABC computer applications&quot;    
+## [2] &quot;A survey of user opinion of computer system response time&quot;    
+## [3] &quot;The EPS user interface management system&quot;                     
+## [4] &quot;System and human system engineering testing of EPS&quot;           
+## [5] &quot;Relation of user-perceived response time to error measurement&quot;
+## [6] &quot;The generation of random, binary, unordered trees&quot;            
+## [7] &quot;The intersection graph of paths in trees&quot;                     
+## [8] &quot;Graph minors IV: Widths of trees and well-quasi-ordering&quot;     
+## [9] &quot;Graph minors: A survey&quot;
+</code></pre>
+
+<p>Documents (Deerwester et al. (1990), Table 2, Part 1)</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Term-Document Matrix</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">df &lt;- read.csv(file=&quot;matrix.csv&quot;)
+print(df, row.names=F)
+</code></pre>
+
+<pre><code>##      Terms D1 D2 D3 D4 D5 D6 D7 D8 D9
+##      human  1  0  0  1  0  0  0  0  0
+##  interface  1  0  1  0  0  0  0  0  0
+##   computer  1  1  0  0  0  0  0  0  0
+##       user  0  1  1  0  1  0  0  0  0
+##     system  0  1  1  2  0  0  0  0  0
+##   response  0  1  0  0  1  0  0  0  0
+##       time  0  1  0  0  1  0  0  0  0
+##        EPS  0  0  1  1  0  0  0  0  0
+##     survey  0  1  0  0  0  0  0  0  1
+##      trees  0  0  0  0  0  1  1  1  0
+##      graph  0  0  0  0  0  0  1  1  1
+##     minors  0  0  0  0  0  0  0  1  1
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Let&#39;s compute SVD</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">df.svd &lt;- svd(df[,-1])
+scales &lt;- df.svd$d[1:2]
+scales
+</code></pre>
+
+<pre><code>## [1] 3.3 2.5
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:;">
+  <hgroup>
+    <h2>Term Space</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">termVectors &lt;- df.svd$u[,1:2]
+terms.lsi &lt;- data.frame(termVectors, terms)
+print(terms.lsi, row.names=F)
+</code></pre>
+
+<pre><code>##      X1     X2     terms
+##  -0.221 -0.113     human
+##  -0.198 -0.072 interface
+##  -0.240  0.043  computer
+##  -0.404  0.057      user
+##  -0.644 -0.167    system
+##  -0.265  0.107  response
+##  -0.265  0.107      time
+##  -0.301 -0.141       EPS
+##  -0.206  0.274    survey
+##  -0.013  0.490     trees
+##  -0.036  0.623     graph
+##  -0.032  0.451    minors
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-6" style="background:;">
+  <hgroup>
+    <h2>Document Space</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">docVectors &lt;- df.svd$v[,1:2]
+docs.lsi &lt;- data.frame(docVectors, Docs=strtrim(docs, 50))
+print(docs.lsi, row.names=F, col.names=F)
+</code></pre>
+
+<pre><code>##       X1     X2                                               Docs
+##  -0.1974 -0.056 Human machine interface for Lab ABC computer appli
+##  -0.6060  0.166 A survey of user opinion of computer system respon
+##  -0.4629 -0.127           The EPS user interface management system
+##  -0.5421 -0.232 System and human system engineering testing of EPS
+##  -0.2795  0.107 Relation of user-perceived response time to error 
+##  -0.0038  0.193  The generation of random, binary, unordered trees
+##  -0.0146  0.438           The intersection graph of paths in trees
+##  -0.0241  0.615 Graph minors IV: Widths of trees and well-quasi-or
+##  -0.0820  0.530                             Graph minors: A survey
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-7" style="background:;">
+  <hgroup>
+    <h2>Query &quot;Human computer interaction&quot;</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">human &lt;- as.numeric(terms.lsi[terms.lsi$terms == &quot;human&quot;, 1:2])
+computer &lt;- as.numeric(terms.lsi[terms.lsi$terms == &quot;computer&quot;, 1:2])
+query &lt;- human + computer
+print(query)
+</code></pre>
+
+<pre><code>## [1] -0.46 -0.07
+</code></pre>
+
+<p>\((0.22, -0.11) + (0.24, 0.04) = (0.46, -0.07)\)</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-8" style="background:;">
+  <hgroup>
+    <h2>Document Scores VS Query</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Cosine distance: \(Cos\theta =  \frac{a \cdot b}{||a|| ||b||}\)</p>
+
+<pre><code class="r">y &lt;- (scales * query)
+scores &lt;- apply(docs.lsi[,1:2], 1, function(x) x %*% y / sqrt(x%*%x * y%*%y))
+print(data.frame(scores, docs), row.names=F)
+</code></pre>
+
+<pre><code>##  scores                                                          docs
+##    0.99     Human machine interface for Lab ABC computer applications
+##    0.93     A survey of user opinion of computer system response time
+##    0.99                      The EPS user interface management system
+##    0.96            System and human system engineering testing of EPS
+##    0.89 Relation of user-perceived response time to error measurement
+##   -0.09             The generation of random, binary, unordered trees
+##   -0.08                      The intersection graph of paths in trees
+##   -0.08      Graph minors IV: Widths of trees and well-quasi-ordering
+##    0.04                                        Graph minors: A survey
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-9" style="background:;">
+  <hgroup>
+    <h2>Query and Document Space</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">plot(docs.lsi$X1, docs.lsi$X2, type=&quot;n&quot;, xlim = c(-1.6, 0))
+arrows(0,0, docs.lsi$X1, docs.lsi$X2)
+arrows(0,0, scales[1]*query[1], scales[2]*query[2], col=2)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-9-1.png" alt="plot of chunk unnamed-chunk-9"> </p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-10" style="background:;">
+  <hgroup>
+    <h2>Term Scores VS Query</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">y &lt;- (scales * query)
+scores &lt;- apply(terms.lsi[,1:2], 1, function(x) x %*% y / sqrt(x%*%x * y%*%y))
+print(data.frame(scores, terms), row.names=F)
+</code></pre>
+
+<pre><code>##  scores     terms
+##    0.94     human
+##    0.97 interface
+##    0.96  computer
+##    0.97      user
+##    0.99    system
+##    0.88  response
+##    0.88      time
+##    0.95       EPS
+##    0.51    survey
+##   -0.09     trees
+##   -0.06     graph
+##   -0.04    minors
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-11" style="background:;">
+  <hgroup>
+    <h2>Let&#39;s dive into math</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Row Space -&gt; Column Space</p>
+
+<p>\(AV = U \Sigma\)</p>
+
+<pre><code>##      Terms D1 D2 D3 D4 D5 D6 D7 D8 D9
+##      human  1  0  0  1  0  0  0  0  0
+##  interface  1  0  1  0  0  0  0  0  0
+##   computer  1  1  0  0  0  0  0  0  0
+##       user  0  1  1  0  1  0  0  0  0
+##     system  0  1  1  2  0  0  0  0  0
+##   response  0  1  0  0  1  0  0  0  0
+##       time  0  1  0  0  1  0  0  0  0
+##        EPS  0  0  1  1  0  0  0  0  0
+##     survey  0  1  0  0  0  0  0  0  1
+##      trees  0  0  0  0  0  1  1  1  0
+##      graph  0  0  0  0  0  0  1  1  1
+##     minors  0  0  0  0  0  0  0  1  1
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-12" style="background:;">
+  <hgroup>
+    <h2>Simplifications</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>\(A = U \Sigma V^{-1} = U \Sigma V^{T}\)</p>
+
+<p>\(A^{T} A = V \Sigma^{T} U^{T} U \Sigma V^{T} = V \Sigma^2 V^{T}\)</p>
+
+<p>\(A A^{T} = U \Sigma V^{T} V \Sigma^{T} U^{T}= U \Sigma^2 U^{T}\)</p>
+
+<p>But what is \(U\), \(\Sigma\), \(V\)?</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-13" style="background:;">
+  <hgroup>
+    <h2>Matrix Spectral Theorem</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>There exists an orthonormal basis of Q consisting of eigenvectors of B. Each eigenvalue is real</p>
+
+<p>\(B = Q \Lambda Q^{T}\)</p>
+
+<p>And our \(AA^{T}\) is like B, squared, symmetric </p>
+
+<p>But what is eigenvalues and eigenvectors?</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-14" style="background:;">
+  <hgroup>
+    <h2>Eigenvalues</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>\(Ax = \lambda x\) </p>
+
+<p><img class=center src=assets/fig/eigen.gif height='400'/></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-15" style="background:;">
+  <hgroup>
+    <h2>Solve</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>\(Ax - \lambda x = 0\)</p>
+
+<p>\((A - \lambda I) x = 0\)</p>
+
+<p>\(A - \lambda I = 0\)</p>
+
+<p>\(\lambda\) - eigenvalues</p>
+
+<p>\(x\) - eigenvectors</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-16" style="background:;">
+  <hgroup>
+    <h2>Algorithm to find SVD</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol>
+<li><p>Find eigenvectors \(U\) of \(A A^{T}\) </p></li>
+<li><p>Find eigenvectors \(V\) of \(A^{T} A\)</p></li>
+<li><p>The non-zero singular values of \(A\) found on the diagonal entries of \(\Sigma\) are the square roots of the non-zero eigenvalues of both \(A A^{T}\) and \(A^{T} A\).</p></li>
+</ol>
+
+<p>That&#39;s it!</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-17" style="background:;">
+  <hgroup>
+    <h2>Eigenvalues</h2>
+  </hgroup>
+  <article data-timings="">
+    <p><img class=center src=assets/fig/eigenval.png height='512'/></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-18" style="background:;">
+  <hgroup>
+    <h2>Links</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>MIT Professor Gilbert Strang teaching 18.06:
+<a href="http://ocw.mit.edu/courses/mathematics/18-06-linear-algebra-spring-2010/video-lectures/">http://ocw.mit.edu/courses/mathematics/18-06-linear-algebra-spring-2010/video-lectures/</a></p>
+
+<p>SVD Tutorial:
+<a href="http://alias-i.com/lingpipe/demos/tutorial/svd/read-me.html">http://alias-i.com/lingpipe/demos/tutorial/svd/read-me.html</a></p>
+
+<p>Wiki: <a href="http://en.wikipedia.org/wiki/Singular_value_decomposition">http://en.wikipedia.org/wiki/Singular_value_decomposition</a></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-19" style="background:;">
+  <hgroup>
+    <h2>Contacts</h2>
+  </hgroup>
+  <article data-timings="">
+    <h3>Nikolay Pavlov, Founder at Biomech</h3>
+
+<ul>
+<li>E-mail: <a href="mailto:me@nikolaypavlov.com">me@nikolaypavlov.com</a> </li>
+<li>Linkedin: <a href="http://linkedin.com/in/nikolaypavlov">http://linkedin.com/in/nikolaypavlov</a></li>
+<li>Facebook: <a href="http://www.facebook.com/pav.nikolay">http://www.facebook.com/pav.nikolay</a></li>
+<li>Twitter: <a href="https://twitter.com/nikolaypavlov">https://twitter.com/nikolaypavlov</a></li>
+<li>Github: <a href="https://github.com/nikolaypavlov">https://github.com/nikolaypavlov</a></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='What is SVD?'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Latent Semantic Analysis'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Term-Document Matrix'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Let&#39;s compute SVD'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Term Space'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='Document Space'>
+         6
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=7 title='Query &quot;Human computer interaction&quot;'>
+         7
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=8 title='Document Scores VS Query'>
+         8
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=9 title='Query and Document Space'>
+         9
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=10 title='Term Scores VS Query'>
+         10
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=11 title='Let&#39;s dive into math'>
+         11
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=12 title='Simplifications'>
+         12
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=13 title='Matrix Spectral Theorem'>
+         13
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=14 title='Eigenvalues'>
+         14
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=15 title='Solve'>
+         15
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=16 title='Algorithm to find SVD'>
+         16
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=17 title='Eigenvalues'>
+         17
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=18 title='Links'>
+         18
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=19 title='Contacts'>
+         19
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- MathJax: Fall back to local if CDN offline but local image fonts are not supported (saves >100MB) -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        processEscapes: true
+      }
+    });
+  </script>
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <!-- <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script> -->
+  <script>window.MathJax || document.write('<script type="text/x-mathjax-config">MathJax.Hub.Config({"HTML-CSS":{imageFont:null}});<\/script><script src="libraries/widgets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"><\/script>')
+</script>
+<!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
